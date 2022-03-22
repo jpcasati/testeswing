@@ -15,6 +15,10 @@ import javax.swing.DefaultListModel;
  */
 public class NewJFrame extends javax.swing.JFrame {
 
+    int linha = -1;
+    
+    Integer numeroSequencial;
+    
     Contato contato;
     
     List<Contato> contatos = new ArrayList();
@@ -27,6 +31,7 @@ public class NewJFrame extends javax.swing.JFrame {
     public NewJFrame() {
         initComponents();
         lstContatos.setModel(modelo);
+        numeroSequencial = 0;
     }
 
     /**
@@ -77,6 +82,11 @@ public class NewJFrame extends javax.swing.JFrame {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
+        });
+        lstContatos.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                lstContatosValueChanged(evt);
+            }
         });
         jScrollPane1.setViewportView(lstContatos);
 
@@ -173,7 +183,14 @@ public class NewJFrame extends javax.swing.JFrame {
     private void btnSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarActionPerformed
         // TODO add your handling code here:
         
-        contato = new Contato();
+        boolean novo = false;
+        
+        if(contato == null) {
+            contato = new Contato();
+            novo = true;
+            numeroSequencial++;
+            contato.setId(numeroSequencial);
+        }
         
         String nome = txtNome.getText();
         contato.setNome(nome);
@@ -184,14 +201,21 @@ public class NewJFrame extends javax.swing.JFrame {
         
         contatos.add(contato);
         
-        String elemento = "Nome: " + contato.getNome() + " - Fone: " +
+        String elemento = contato.getId() + " / Nome: " + contato.getNome() + " - Fone: " +
                 contato.getFone() + " - E-Mail: " + contato.getEmail();
         
-        modelo.addElement(elemento);
+        if(novo) {
+            modelo.addElement(elemento);
+        } else {
+            
+            modelo.setElementAt(elemento, linha);
+        }
         
         lstContatos.setModel(modelo);
         
         limparCampos();
+        
+        txtNome.requestFocus();
         
     }//GEN-LAST:event_btnSalvarActionPerformed
 
@@ -208,15 +232,41 @@ public class NewJFrame extends javax.swing.JFrame {
     private void btnRemoverSelecionadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoverSelecionadoActionPerformed
         // TODO add your handling code here:
         
-        int selecionado = lstContatos.getSelectedIndex();
+        int[] selecionados = lstContatos.getSelectedIndices();
         
-        modelo.remove(selecionado);
-        contatos.remove(selecionado);
+        for(int i = 0; i < selecionados.length; i++) {
+            modelo.remove(selecionados[i] - i);
+            contatos.remove(selecionados[i] - i);
+        }
         
         lstContatos.setModel(modelo);
     }//GEN-LAST:event_btnRemoverSelecionadoActionPerformed
 
+    private void lstContatosValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstContatosValueChanged
+        // TODO add your handling code here:
+        
+        String selecionado = lstContatos.getSelectedValue();
+        
+        String[] idSelecionado = selecionado.split("/");
+        
+        Integer id = Integer.parseInt(idSelecionado[0].trim());
+        
+        for(int i=0; i< contatos.size(); i++) {
+            
+            if(contatos.get(i).getId() == id) {
+                contato = contatos.get(i);
+                linha = i;
+            }
+        }
+        
+        txtNome.setText(contato.getNome());
+        txtFone.setText(contato.getFone());
+        txtEmail.setText(contato.getEmail());
+        
+    }//GEN-LAST:event_lstContatosValueChanged
+
     public void limparCampos() {
+        contato = null;
         txtNome.setText("");
         txtFone.setText("");
         txtEmail.setText("");
